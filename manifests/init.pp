@@ -1,7 +1,5 @@
 # vra_puppet_plugin_prep
 #
-# A description of what this class does
-#
 # @summary Prepares a PE master for vRA Puppet Plugin integration.
 #
 # @example
@@ -16,25 +14,16 @@
 #     autosign_secret    => 'S3cr3tP@ssw0rd!',
 #   }
 class vra_puppet_plugin_prep (
-  # Array  $environments      = [ 'production', 'development', ],
-  # Array  $roles             = [ 'role::generic', ],
-  String  $vro_plugin_user   = 'vro-plugin-user',
-  String  $vro_password      = 'puppetlabs',
-  String  $vro_password_hash = '$1$Fq9vkV1h$4oMRtIjjjAhi6XQVSH6.Y.', #puppetlabs
-  Boolean $manage_autosign   = true,
-  String  $autosign_secret   = 'S3cr3tP@ssw0rd!',
-  String  $vro_email         = 'vro-plugin-user@example',
-  String  $vro_display_name  = 'vRO Puppet Plugin',
+  String            $vro_plugin_user     = 'vro-plugin-user',
+  String            $vro_password        = 'puppetlabs',
+  String            $vro_password_hash   = '$1$Fq9vkV1h$4oMRtIjjjAhi6XQVSH6.Y.', #puppetlabs
+  Boolean           $manage_autosign     = true,
+  Optional[Boolean] $vro_plugin_user_uid = undef,
+  Optional[Boolean] $vro_plugin_user_gid = undef,
+  String            $autosign_secret     = 'S3cr3tP@ssw0rd!',
+  String            $vro_email           = 'vro-plugin-user@example',
+  String            $vro_display_name    = 'vRO Puppet Plugin',
 ) {
-
-  # node_group { 'Roles':
-  #   ensure               => 'present',
-  #   classes              => {},
-  #   environment          => 'production',
-  #   override_environment => 'false',
-  #   parent               => 'All Nodes',
-  #   rule                 => [],
-  # }
 
   $vro_role_name = 'VRO Plugin User'
   $permissions   = [
@@ -61,12 +50,35 @@ class vra_puppet_plugin_prep (
     require      => Rbac_role[$vro_role_name],
   }
 
-  user { $vro_plugin_user:
+  if $vro_plugin_user_gid {
+    group { $vro_plugin_user:
+      ensure => present,
+      gid    => $vro_plugin_user_gid,
+    }
+  }
+
+  $uid_attr = $vro_plugin_user_uid ? {
+    /Integer/ => { uid => $vro_plugin_user_uid, },
+    default   => {},
+  }
+
+  $gid_attr = $vro_plugin_user_gid ? {
+    /Integer/ => { gid => $vro_plugin_user_gid, },
+    default   => {},
+  }
+
+  $user_base_attrs = {
     ensure     => present,
     shell      => '/bin/bash',
     password   => $vro_password_hash,
     groups     => ['pe-puppet'],
     managehome => true,
+  }
+
+  $user_attrs = $user_base_attrs + $uid_attr + $gid_attr
+
+  user { $vro_plugin_user:
+    * => $user_attrs,
   }
 
   file { '/etc/sudoers.d/vro-plugin-user':
@@ -107,4 +119,3 @@ class vra_puppet_plugin_prep (
     }
   }
 }
-

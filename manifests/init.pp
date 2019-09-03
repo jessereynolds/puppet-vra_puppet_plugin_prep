@@ -11,6 +11,7 @@
 #     vro_password       => 'puppetlabs',
 #     vro_password_hash  => '$1$Fq9vkV1h$4oMRtIjjjAhi6XQVSH6.Y.',
 #     manage_autosign    => true,
+#     manage_localuser   => true,
 #     autosign_secret    => 'S3cr3tP@ssw0rd!',
 #   }
 class vra_puppet_plugin_prep (
@@ -18,6 +19,7 @@ class vra_puppet_plugin_prep (
   String            $vro_password        = 'puppetlabs',
   String            $vro_password_hash   = '$1$Fq9vkV1h$4oMRtIjjjAhi6XQVSH6.Y.', #puppetlabs
   Boolean           $manage_autosign     = true,
+  Boolean           $manage_localuser    = true,
   Optional[Boolean] $vro_plugin_user_uid = undef,
   Optional[Boolean] $vro_plugin_user_gid = undef,
   String            $autosign_secret     = 'S3cr3tP@ssw0rd!',
@@ -77,8 +79,10 @@ class vra_puppet_plugin_prep (
 
   $user_attrs = $user_base_attrs + $uid_attr + $gid_attr
 
-  user { $vro_plugin_user:
-    * => $user_attrs,
+  if $manage_localuser {
+    user { $vro_plugin_user:
+      * => $user_attrs,
+    }
   }
 
   file { '/etc/sudoers.d/vro-plugin-user':

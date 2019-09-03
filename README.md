@@ -1,5 +1,7 @@
 
-# vra_puppet_plugin_prep
+# vra_puppet_plugin_prep - DEPRECATED
+
+Note, this repo has been forked to [github.com/puppetlabs](https://github.com/puppetlabs/puppet-vra_puppet_plugin_prep) and is now being maintained there.
 
 Prepares a Puppet Enterprise master for vRA Puppet Plugin integration.
 
